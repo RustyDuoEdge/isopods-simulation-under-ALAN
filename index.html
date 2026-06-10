@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-color: #111111;
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+        #labContainer {
+            display: flex;
+            flex-direction: row;
+            background-color: #1a1a1a;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.7);
+            gap: 20px;
+            align-items: stretch;
+            max-width: 1150px;
+            width: 100%;
+            position: relative;
+        }
+        /* Language Switcher Bar at top-right */
+        #i18nBar {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        .lang-btn {
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #aaa;
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .lang-btn.active {
+            background-color: #00ffcc;
+            color: #111;
+            border-color: #00ffcc;
+        }
+        .side-panel {
+            flex: 1;
+            min-width: 240px;
+            background-color: #222222;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #2d2d2d;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px; /* Leave space for i18n bar */
+        }
+        .panel-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid #3d3d3d;
+            padding-bottom: 6px;
+            margin-bottom: 4px;
+        }
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        canvas {
+            border: 1px solid #3c3c3c;
+            background-color: #0b0b0b;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border-radius: 6px;
+        }
+        #status {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            min-height: 22px;
+        }
+        #infoFooter {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #888;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px;
+            border-radius: 6px;
+            background-color: #1c1c1c;
+        }
+        .control-group label {
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #00ffcc;
+        }
+        .btn-toggle {
+            width: 100%;
+            border: none;
+            color: white;
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .btn-off { background-color: #662c2c; border: 1px solid #883a3a; }
+        .btn-on { background-color: #2c6643; border: 1px solid #3a8856; }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 3px;
+        }
+        .legend-line {
+            width: 18px;
+            height: 0;
+            border-top: 2px dashed;
+        }
+    </style>
+</head>
+<body>
+
+<div id="labContainer">
+    
+    <div id="i18nBar">
+        <button id="btnZh" class="lang-btn active" onclick="switchLang('zh')">中文</button>
+        <button id="btnEn" class="lang-btn" onclick="switchLang('en')">English</button>
+    </div>
+    
+    <div class="side-panel">
+        <div class="panel-title" id="titlePhysics" style="color: #33b5e5;">⚙️ 物理环境控制</div>
+        
+        <div class="control-group">
+            <label><span id="lblSpeed">播放速度:</span><span id="speedVal" style="color:#33b5e5;">1.0x</span></label>
+            <input type="range" id="speedSlider" min="0" max="4" step="0.5" value="1">
+        </div>
+
+        <div class="control-group">
+            <label><span id="lblCount">鼠妇总数:</span><span id="countVal" style="color:#33b5e5;">160</span></label>
+            <input type="range" id="countSlider" min="10" max="300" step="5" value="160">
+        </div>
+
+        <div class="control-group">
+            <label><span id="lblRadius">光源物理半径:</span><span id="radiusVal" style="color:#33b5e5;">4.2</span></label>
+            <input type="range" id="radiusSlider" min="1.0" max="8.0" step="0.1" value="4.2">
+        </div>
+        
+        <div class="control-group" style="margin-top: auto; background-color:#151515;">
+            <div style="font-size:11px; font-weight:bold; margin-bottom:5px; color:#888;" id="lblLegendTitle">📊 拓扑边界图例：</div>
+            <div class="legend-item"><div class="legend-line" style="border-color:#555555;"></div><span id="legThreshold">1. 边缘忽略边界</span></div>
+            <div class="legend-item"><div class="legend-line" style="border-color:#ffaa00;"></div><span id="legImin">2. 正趋光并轨界线</span></div>
+            <div class="legend-item"><div class="legend-line" style="border-color:#ff4400;"></div><span id="legImax">3. 负趋光排斥核心</span></div>
+        </div>
+    </div>
+
+    <div class="center-area">
+        <div id="status" style="color: #00ffcc;">Loading Lab Platform...</div>
+        <canvas id="simCanvas" width="550" height="550"></canvas>
+        <div id="infoFooter">
+            <div><span id="lblProgress">进度:</span> <span id="frameCount" style="color:#00ffcc;">0</span></div>
+            <div><span id="lblLightState">路灯:</span> <span id="lightStatus" style="font-weight:bold; color:#aaa;">-</span></div>
+        </div>
+    </div>
+
+    <div class="side-panel">
+        <div class="panel-title" id="titleBiology" style="color: #00ffcc;">🧬 生物本能微调</div>
+        
+        <div class="control-group" style="background-color: #1a2622;">
+            <label><span id="lblTrample" style="color:#00ffcc;">叠罗汉踩踏概率:</span><span id="trampleVal" style="color:#00ffcc;">30%</span></label>
+            <input type="range" id="trampleSlider" min="0" max="100" step="5" value="30">
+        </div>
+
+        <div class="control-group">
+            <label><span id="lblThreshold">1. 边缘忽略阈值:</span><span id="thresholdVal" style="color:#888888;">5.0</span></label>
+            <input type="range" id="thresholdSlider" min="0" max="30" step="0.5" value="5">
+        </div>
+
+        <div class="control-group" style="border-left: 3px solid #ffaa00;">
+            <label><span id="lblImin" style="color:#ffaa00;">2. 正趋光阈值 I_min:</span><span id="iminVal" style="color:#ffaa00;">15.0</span></label>
+            <input type="range" id="iminSlider" min="2" max="50" step="0.5" value="15">
+        </div>
+
+        <div class="control-group" style="border-left: 3px solid #ff4400;">
+            <label><span id="lblImax" style="color:#ff4400;">3. 负趋光阈值 I_max:</span><span id="imaxVal" style="color:#ff4400;">55.0</span></label>
+            <input type="range" id="imaxSlider" min="10" max="95" step="0.5" value="55">
+        </div>
+
+        <div class="control-group" style="background-color: #282119; margin-top: auto;">
+            <label style="margin-bottom: 4px;"><span id="lblManualCtrl">光源手动接管:</span></label>
+            <button id="lightBtn" class="btn-toggle btn-off">Light On</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// Global Scope Reference for language translation trigger
+let switchLang;
+
+(function() {
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // DOM Cache Elements
+    const speedSlider = document.getElementById('speedSlider');
+    const speedVal = document.getElementById('speedVal');
+    const countSlider = document.getElementById('countSlider');
+    const countVal = document.getElementById('countVal');
+    const radiusSlider = document.getElementById('radiusSlider');
+    const radiusVal = document.getElementById('radiusVal');
+    const trampleSlider = document.getElementById('trampleSlider');
+    const trampleVal = document.getElementById('trampleVal');
+    const thresholdSlider = document.getElementById('thresholdSlider');
+    const thresholdVal = document.getElementById('thresholdVal');
+    const iminSlider = document.getElementById('iminSlider');
+    const iminVal = document.getElementById('iminVal');
+    const imaxSlider = document.getElementById('imaxSlider');
+    const imaxVal = document.getElementById('imaxVal');
+    const lightBtn = document.getElementById('lightBtn');
+    const lightStatusText = document.getElementById('lightStatus');
+    
+    // =========================================================================
+    // 1. MULTI-LANGUAGE DICTIONARY (i18n Localization Engine)
+    // =========================================================================
+    let currentLang = 'zh'; 
+    const langPack = {
+        zh: {
+            titlePhysics: "⚙️ 物理环境控制",
+            lblSpeed: "播放速度:",
+            lblCount: "鼠妇总数:",
+            lblRadius: "光源物理半径:",
+            lblLegendTitle: "📊 拓扑边界图例：",
+            legThreshold: "1. 边缘忽略边界 (I_threshold)",
+            legImin: "2. 正趋光并轨界线 (I_min)",
+            legImax: "3. 负趋光排斥核心 (I_max)",
+            titleBiology: "🧬 生物本能微调",
+            lblTrample: "叠罗汉踩踏概率:",
+            lblThreshold: "1. 边缘忽略阈值 (灰色):",
+            lblImin: "2. 正趋光阈值 I_min (橙色):",
+            lblImax: "3. 负趋光阈值 I_max (红色):",
+            lblManualCtrl: "光源手动接管:",
+            lblProgress: "进度:",
+            lblLightState: "路灯:",
+            btnLightOn: "开启路灯",
+            btnLightOff: "关闭路灯",
+            statusDark: "🌌 纯暗环境 | 全局极化凝聚中",
+            statusChant: "⚠️ 临界阻挫！两区闭合，交界线乱哆嗦中！",
+            statusNormal: "💡 拓扑管道开放 (宽度: {gap}) | 叠罗汉: {trample} 只",
+            lightAutoOn: "自动开启",
+            lightAutoOff: "自动关闭",
+            lightManualOn: "手动开启",
+            lightManualOff: "手动关闭"
+        },
+        en: {
+            titlePhysics: "⚙️ Physics Control",
+            lblSpeed: "Sim Speed:",
+            lblCount: "Total Isopods:",
+            lblRadius: "Light Physics Radius:",
+            lblLegendTitle: "📊 Topology Boundaries:",
+            legThreshold: "1. Outer Ignore Limit (I_threshold)",
+            legImin: "2. Pos-Taxis Alignment (I_min)",
+            legImax: "3. Neg-Taxis Repel Core (I_max)",
+            titleBiology: "🧬 Instinct Tweaks",
+            lblTrample: "Trampling Prob (Reddit):",
+            lblThreshold: "1. Ignore Threshold (Gray):",
+            lblImin: "2. Pos-Taxis I_min (Orange):",
+            lblImax: "3. Neg-Taxis I_max (Red):",
+            lblManualCtrl: "Manual Overrider:",
+            lblProgress: "Frames:",
+            lblLightState: "Lamp:",
+            btnLightOn: "Turn Lamp ON",
+            btnLightOff: "Turn Lamp OFF",
+            statusDark: "🌌 Total Darkness | Pure Vicsek Polarized Flocking",
+            statusChant: "⚠️ Geometrical Frustration! Sliding mode chattering on boundary!",
+            statusNormal: "💡 Topology Conduit Active (Width: {gap}) | Trampling: {trample}",
+            lightAutoOn: "Auto ON",
+            lightAutoOff: "Auto OFF",
+            lightManualOn: "Manual ON",
+            lightManualOff: "Manual OFF"
+        }
+    };
+
+    switchLang = function(lang) {
+        currentLang = lang;
+        document.getElementById('btnZh').className = (lang === 'zh') ? "lang-btn active" : "lang-btn";
+        document.getElementById('btnEn').className = (lang === 'en') ? "lang-btn active" : "lang-btn";
+        
+        const pack = langPack[lang];
+        // Apply text content translations to DOM trees
+        document.getElementById('titlePhysics').innerText = pack.titlePhysics;
+        document.getElementById('lblSpeed').innerText = pack.lblSpeed;
+        document.getElementById('lblCount').innerText = pack.lblCount;
+        document.getElementById('lblRadius').innerText = pack.lblRadius;
+        document.getElementById('lblLegendTitle').innerText = pack.lblLegendTitle;
+        document.getElementById('legThreshold').innerText = pack.legThreshold;
+        document.getElementById('legImin').innerText = pack.legImin;
+        document.getElementById('legImax').innerText = pack.legImax;
+        document.getElementById('titleBiology').innerText = pack.titleBiology;
+        document.getElementById('lblTrample').innerText = pack.lblTrample;
+        document.getElementById('lblThreshold').innerText = pack.lblThreshold;
+        document.getElementById('lblImin').innerText = pack.lblImin;
+        document.getElementById('lblImax').innerText = pack.lblImax;
+        document.getElementById('lblManualCtrl').innerText = pack.lblManualCtrl;
+        document.getElementById('lblProgress').innerText = pack.lblProgress;
+        document.getElementById('lblLightState').innerText = pack.lblLightState;
+        
+        // Refresh manual override button string immediately
+        if (lightOn) {
+            lightBtn.innerText = pack.btnLightOff;
+            lightBtn.className = "btn-toggle btn-on";
+            lightStatusText.innerText = userControlledLight ? pack.lightManualOn : pack.lightAutoOn;
+        } else {
+            lightBtn.innerText = pack.btnLightOn;
+            lightBtn.className = "btn-toggle btn-off";
+            lightStatusText.innerText = userControlledLight ? pack.lightManualOff : pack.lightAutoOff;
+        }
+    };
+
+    // =========================================================================
+    // 2. CORE BIOROBOTIC SIMULATION DYNAMICS (Archived in English Notation)
+    // =========================================================================
+    let target_N = 160;               // Total system agent capacity
+    const dt = 0.04;                  // Discrete integration step size
+    let frame = 0;                    // Internal clock ticks counter
+    let lightOn = false;              // Environmental illumination status flag
+    let userControlledLight = false;  // Override status to separate automation loops
+    let simSpeedMultiplier = 1.0;     // Macro processing update loops per requestAnimationFrame
+    
+    const simSize = 20;               // Arena scale in real physics space metrics
+    const scale = canvas.width / simSize; // Pixel space coordinate projection coefficient
+    
+    let R_disk = 4.2;                 // Base geometric radius of photons core
+    const w_edge = 0.8;               // Diffuse edge factor width for Fermi-Dirac equation
+    const I0 = 100.0;                 // Central point absolute luminosity constant
+    
+    // Strategic topological boundaries for sensory networks
+    let I_threshold = 5.0;  
+    let I_min = 15.0;     
+    let I_max = 55.0;     
+    
+    let trampleProbability = 0.30;    // Vertical dimension freedom probability (Reddit Piling Rule)
+
+    // =========================================================================
+    // 3. EVENT BINDING INTERFACES WITH RANGE PROTECTIONS
+    // =========================================================================
+    speedSlider.addEventListener('input', (e) => {
+        simSpeedMultiplier = parseFloat(e.target.value);
+        speedVal.innerText = simSpeedMultiplier.toFixed(1) + 'x';
+    });
+    countSlider.addEventListener('input', (e) => {
+        target_N = parseInt(e.target.value);
+        countVal.innerText = target_N;
+    });
+    radiusSlider.addEventListener('input', (e) => {
+        R_disk = parseFloat(e.target.value);
+        radiusVal.innerText = R_disk.toFixed(1);
+    });
+    trampleSlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        trampleProbability = val / 100.0;
+        trampleVal.innerText = val + '%';
+    });
+    
+    thresholdSlider.addEventListener('input', (e) => {
+        I_threshold = parseFloat(e.target.value);
+        if(I_threshold > I_min) {
+            I_min = I_threshold;
+            iminSlider.value = I_min;
+            iminVal.innerText = I_min.toFixed(1);
+        }
+        if(I_min > I_max) {
+            I_max = I_min;
+            imaxSlider.value = I_max;
+            imaxVal.innerText = I_max.toFixed(1);
+        }
+        thresholdVal.innerText = I_threshold.toFixed(1);
+    });
+    iminSlider.addEventListener('input', (e) => {
+        I_min = parseFloat(e.target.value);
+        if(I_min < I_threshold) {
+            I_threshold = I_min;
+            thresholdSlider.value = I_threshold;
+            thresholdVal.innerText = I_threshold.toFixed(1);
+        }
+        if(I_min > I_max) {
+            I_max = I_min;
+            imaxSlider.value = I_max;
+            imaxVal.innerText = I_max.toFixed(1);
+        }
+        iminVal.innerText = I_min.toFixed(1);
+    });
+    imaxSlider.addEventListener('input', (e) => {
+        I_max = parseFloat(e.target.value);
+        if(I_max < I_min) {
+            I_min = I_max;
+            iminSlider.value = I_min;
+            iminVal.innerText = I_min.toFixed(1);
+            if(I_min < I_threshold) {
+                I_threshold = I_min;
+                thresholdSlider.value = I_threshold;
+                thresholdVal.innerText = I_threshold.toFixed(1);
+            }
+        }
+        imaxVal.innerText = I_max.toFixed(1);
+    });
+
+    lightBtn.addEventListener('click', () => {
+        userControlledLight = true; 
+        lightOn = !lightOn;
+        const pack = langPack[currentLang];
+        if (lightOn) {
+            lightBtn.innerText = pack.btnLightOff;
+            lightBtn.className = "btn-toggle btn-on";
+            lightStatusText.innerText = pack.lightManualOn;
+            lightStatusText.style.color = "#ffcc00";
+        } else {
+            lightBtn.innerText = pack.btnLightOn;
+            lightBtn.className = "btn-toggle btn-off";
+            lightStatusText.innerText = pack.lightManualOff;
+            lightStatusText.style.color = "#777";
+        }
+    });
+
+    // Analytical spatial mapping inversion: Maps specific intensity back to a 2D physical distance scalar
+    function getRadiusFromIntensity(I_target) {
+        if (I_target >= I0) return 0.1;
+        if (I_target <= 0) return 14.0; 
+        // Inverted Fermi-Dirac distribution: r = R_disk + w_edge * ln(I0/I_target - 1)
+        const r = R_disk + w_edge * Math.log((I0 / I_target) - 1.0);
+        return Math.max(0.1, r);
+    }
+
+    // =========================================================================
+    // 4. SMART ISOPOD AGENT DESIGN CLASS
+    // =========================================================================
+    class SmartIsopod {
+        constructor() {
+            this.reset();
+        }
+
+        reset() {
+            // Distribute agents randomly across toroidal physics dimensions
+            this.x = Math.random() * 20 - 10;
+            this.y = Math.random() * 20 - 10;
+            this.theta = Math.random() * Math.PI * 2;
+            this.v_max = 2.4;
+            this.v = 2.4;
+            this.k_light_turn = 8.0;   // Optical steering angular torque scale
+            this.J_align = 4.5;        // Vicsek alignment alignment sensitivity scale
+            this.K_repel = 4.0;        // 2D horizontal avoidance vector scale
+            this.max_omega = 8.0;      // Hard boundary angular ceiling caps (rad/s)
+            this.R_c = 1.3;            // Alignment perception radius
+            this.R_r = 0.42;           // Horizontal solid hard-shell physical core
+            this.isTrampling = false;  // Quasi-3D altitude state flag
+        }
+
+        getLightIntensity(tx, ty) {
+            if (!lightOn) return 0.0;
+            const r = Math.sqrt(tx*tx + ty*ty);
+            // Fermi-Dirac smooth step decay modeling photon dispersion fields
+            return I0 / (1.0 + Math.exp((r - R_disk) / w_edge));
+        }
+
+        updateBehavior(allIsopods) {
+            const I_current = this.getLightIntensity(this.x, this.y);
+            
+            // Front-oriented sensory antennae coordinate math
+            const ds = 0.3;
+            const left_x = this.x + ds * Math.cos(this.theta + 30 * Math.PI / 180);
+            const left_y = this.y + ds * Math.sin(this.theta + 30 * Math.PI / 180);
+            const right_x = this.x + ds * Math.cos(this.theta - 30 * Math.PI / 180);
+            const right_y = this.y + ds * Math.sin(this.theta - 30 * Math.PI / 180);
+            
+            const I_left = this.getLightIntensity(left_x, left_y);
+            const I_right = this.getLightIntensity(right_x, right_y);
+            
+            let omega_light = 0.0;
+
+            // Execution of strict 3-Phase Taxis boundary partitioning
+            if (I_current > I_max) {
+                // Phase A: Core Over-exposure Zone -> Strong Negative Phototaxis (Escape Core)
+                omega_light = this.k_light_turn * (I_right - I_left); 
+            } 
+            else if (I_current >= I_min && I_current <= I_max) {
+                // Phase B: Optimization Conduit Safe-Zone -> No Steering Torque applied
+                omega_light = 0.0; 
+            } 
+            else if (I_current < I_min && I_current >= I_threshold && lightOn) {
+                // Phase C: Dim Outer Margin -> Positive Phototaxis (Turn inwards to fake shelter)
+                omega_light = this.k_light_turn * (I_left - I_right); 
+            }
+
+            let omega_align = 0.0;
+            let omega_repel = 0.0;
+            let n_neighbors = 0;
+            let speed_modifier = 1.0;
+            
+            const heading_x = Math.cos(this.theta);
+            const heading_y = Math.sin(this.theta);
+            
+            let currentlyOverlapping = false;
+
+            // Evaluate multi-body neighborhood matrices
+            for (let i = 0; i < allIsopods.length; i++) {
+                const other = allIsopods[i];
+                if (other === this) continue;
+
+                // Enforce toroidal wrapped periodic space distance calculations
+                let dx = other.x - this.x;
+                if (dx > 10) dx -= 20; else if (dx < -10) dx += 20;
+                let dy = other.y - this.y;
+                if (dy > 10) dy -= 20; else if (dy < -10) dy += 20;
+
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                if (dist < this.R_c) {
+                    n_neighbors++;
+                    omega_align += Math.sin(other.theta - this.theta);
+
+                    if (dist > 0) {
+                        const dir_x = dx / dist;
+                        const dir_y = dy / dist;
+                        const is_in_front = (dir_x * heading_x + dir_y * heading_y) > 0.2;
+
+                        // Vehicle Car-Following braking evaluations
+                        if (is_in_front) {
+                            let isStacking = Math.random() < trampleProbability;
+                            let factor = 1.0 - Math.exp(-(dist - this.R_r) / 0.5);
+                            if (isStacking) {
+                                factor = Math.max(0.65, factor); // Climbing penalty bypasses total lockups
+                                currentlyOverlapping = true;
+                            } else {
+                                factor = Math.max(0.10, factor); // Heavy deceleration brake rule
+                            }
+                            if (factor < speed_modifier) speed_modifier = factor;
+                        }
+                    }
+
+                    // 2D Avoidance Vector Masking
+                    if (dist < this.R_r && dist > 0) {
+                        if (Math.random() < trampleProbability) {
+                            currentlyOverlapping = true; // Vertical jump bypasses 2D plane push vectors
+                        } else {
+                            const u_x = -dx / dist;
+                            const u_y = -dy / dist;
+                            omega_repel += (u_x * (-Math.sin(this.theta)) + u_y * Math.cos(this.theta));
+                        }
+                    }
+                }
+            }
+
+            this.isTrampling = currentlyOverlapping;
+
+            if (n_neighbors > 0) {
+                omega_align = (this.J_align * omega_align) / n_neighbors;
+                omega_repel = (this.K_repel * omega_repel) / n_neighbors;
+            }
+
+            this.v = this.v_max * speed_modifier;
+
+            // Inject non-equilibrium thermal Gaussian fluctuations
+            const u1 = Math.random() || 0.0001;
+            const u2 = Math.random();
+            const gaussian_noise = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2) * 0.4;
+            
+            let total_omega = omega_light + omega_align + omega_repel + gaussian_noise;
+            if (total_omega > this.max_omega) total_omega = this.max_omega;
+            if (total_omega < -this.max_omega) total_omega = -this.max_omega;
+
+            // Integration pipeline step
+            this.theta += total_omega * dt;
+            this.x += this.v * Math.cos(this.theta) * dt;
+            this.y += this.v * Math.sin(this.theta) * dt;
+
+            // Toroidal boundary teleports
+            this.x = (this.x + 10) % 20; if (this.x < 0) this.x += 20; this.x -= 10;
+            this.y = (this.y + 10) % 20; if (this.y < 0) this.y += 20; this.y -= 10;
+        }
+
+        draw() {
+            const cx = (this.x + 10) * scale;
+            const cy = (10 - this.y) * scale; 
+            
+            const speedRatio = (this.v - 0.2) / (this.v_max - 0.2);
+            let r = 0, g = 0, b = 0;
+            
+            // Aesthetic mapping: Neon Pink for Reddit-climbing stackers, Cyan-to-Green for 2D flow velocities
+            if (this.isTrampling && lightOn) {
+                r = 255; g = 100; b = 200; 
+            } else {
+                g = Math.floor(200 * (1 - speedRatio) + 55);
+                b = Math.floor(255 * speedRatio);
+            }
+            
+            ctx.strokeStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.lineWidth = this.isTrampling ? 3 : 2;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(
+                cx + Math.cos(this.theta) * (this.v * 3.5 + 4), 
+                cy - Math.sin(this.theta) * (this.v * 3.5 + 4)
+            );
+            ctx.stroke();
+            
+            ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            ctx.beginPath();
+            ctx.arc(cx, cy, this.isTrampling ? 3 : 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    let isopods = [];
+    for (let i = 0; i < target_N; i++) isopods.push(new SmartIsopod());
+
+    // Auxiliary drawing function to print spatial dashed contours inside canvas
+    function drawThresholdCircle(intensity, color) {
+        const physicsRadius = getRadiusFromIntensity(intensity);
+        const pixelRadius = physicsRadius * scale;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, canvas.height / 2, pixelRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // =========================================================================
+    // 5. MASTER EXECUTION AND RENDERING LOOP
+    // =========================================================================
+    function mainLoop() {
+        const iterations = Math.floor(simSpeedMultiplier);
+        const remainder = simSpeedMultiplier - iterations;
+        
+        let actualUpdates = iterations;
+        if (Math.random() < remainder) actualUpdates += 1;
+
+        for (let k = 0; k < actualUpdates; k++) {
+            frame++;
+            
+            // Handle array shrinking or expanding via slider inputs dynamically
+            if (isopods.length < target_N) {
+                while(isopods.length < target_N) isopods.push(new SmartIsopod());
+            } else if (isopods.length > target_N) {
+                isopods.splice(target_N);
+            }
+
+            // Automation cycle loops for light toggling
+            if (!userControlledLight) {
+                if (frame >= 600) {
+                    frame = 0;
+                    lightOn = false;
+                    isopods.forEach(p => { if(Math.random() < 0.3) p.reset(); });
+                }
+                const pack = langPack[currentLang];
+                if (frame < 150) {
+                    lightOn = false;
+                    lightStatusText.innerText = pack.lightAutoOff;
+                    lightStatusText.style.color = "#aaa";
+                } else {
+                    lightOn = true;
+                    lightStatusText.innerText = pack.lightAutoOn;
+                    lightStatusText.style.color = "#ffcc00";
+                }
+            }
+            
+            for (let i = 0; i < isopods.length; i++) {
+                isopods[i].updateBehavior(isopods);
+            }
+        }
+
+        // Parse localization outputs into the string templates inside status components
+        const countActiveTrample = isopods.filter(p => p.isTrampling).length;
+        const pack = langPack[currentLang];
+        
+        if (lightOn) {
+            const gap = I_max - I_min;
+            if (gap <= 2.0) {
+                document.getElementById('status').innerText = pack.statusChant;
+                document.getElementById('status').style.color = "#ff4400";
+            } else {
+                let msg = pack.statusNormal.replace("{gap}", gap.toFixed(1)).replace("{trample}", countActiveTrample);
+                document.getElementById('status').innerText = msg;
+                document.getElementById('status').style.color = "#ffcc00";
+            }
+        } else {
+            document.getElementById('status').innerText = pack.statusDark;
+            document.getElementById('status').style.color = "#00ffcc";
+        }
+        
+        const suffix = userControlledLight ? (currentLang === 'zh' ? " (手动)" : " (Manual)") : (currentLang === 'zh' ? " / 600" : " / 600");
+        document.getElementById('frameCount').innerText = frame + suffix;
+
+        // Reset canvas buffer
+        ctx.fillStyle = '#0b0b0b';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Print photon gradient maps and topological dashed lines
+        if (lightOn) {
+            const screenX = canvas.width / 2;
+            const screenY = canvas.height / 2;
+            const pixelRadius = R_disk * scale;
+
+            const gradient = ctx.createRadialGradient(screenX, screenY, pixelRadius * 0.75, screenX, screenY, pixelRadius + w_edge * scale);
+            gradient.addColorStop(0, 'rgba(255, 204, 0, 0.12)');
+            gradient.addColorStop(1, 'rgba(255, 204, 0, 0.0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, pixelRadius + w_edge * scale, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Trace spatial vectors 
+            drawThresholdCircle(I_threshold, 'rgba(100, 100, 100, 0.6)'); 
+            drawThresholdCircle(I_min, 'rgba(255, 170, 0, 0.8)');       
+            drawThresholdCircle(I_max, 'rgba(255, 68, 0, 0.9)');         
+        }
+
+        // Draw active vector entities
+        for (let i = 0; i < isopods.length; i++) {
+            isopods[i].draw();
+        }
+
+        requestAnimationFrame(mainLoop);
+    }
+
+    // Initialize defaults on boot
+    switchLang('zh');
+    requestAnimationFrame(mainLoop);
+})();
+</script>
+
+</body>
+</html>
