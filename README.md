@@ -1,5 +1,7 @@
 # 🦠 Isopods Simulation Under Artificial Light at Night
 
+[中文版](README_ZH.md) | English
+
 A zero-dependency, pure front-end (Vanilla JS & Canvas) digital behavioral biology laboratory designed to simulate and observe the self-organizing behaviors of Isopod (pill bug) populations.
 
 By integrating mathematical modeling with individual behavioral rules, this simulation demonstrates how a crowd of independent agents can spontaneously construct a stable, topological conduit without any centralized orchestration.

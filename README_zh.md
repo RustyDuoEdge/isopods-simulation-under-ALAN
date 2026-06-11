@@ -1,4 +1,6 @@
-# 🦠 Isopods Simulation Under Artificial Light at Night
+# 🦠 夜间人工光照下的鼠妇行为仿真
+
+中文 | [English](README.md)
 
 这是一个基于纯前端（Vanilla JS & Canvas）开发的数字虚拟行为学实验室，用于模拟和观察鼠妇（*Isopods*，又称潮虫）群体的自组织行为形态（Self-Organizing Behaviors）。
 
