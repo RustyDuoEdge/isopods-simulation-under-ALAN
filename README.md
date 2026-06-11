@@ -79,7 +79,7 @@
 
 ```bash
 # 1. 克隆实验室仓库
-git clone [github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git](github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git)
+git clone github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git
 cd isopods-simulation-under-ALAN
 
 # 2. 用任何现代浏览器直接打开 index.html 即可开始实验
