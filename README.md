@@ -82,7 +82,7 @@ Zero dependencies (No Node.js, No npm, No Webpack). Clone and use right out of t
 
 ```bash
 # 1. Clone the repository
-git clone [https://github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git](https://github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git)
+git clone https://github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git
 cd isopods-simulation-under-ALAN
 
 # 2. Open index.html directly in any modern browser
