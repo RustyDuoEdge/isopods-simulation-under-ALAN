@@ -86,4 +86,4 @@ git clone https://github.com/RustyDuoEdge/isopods-simulation-under-ALAN.git
 cd isopods-simulation-under-ALAN
 
 # 2. Open index.html directly in any modern browser
-open index.html
+firefox index.html
